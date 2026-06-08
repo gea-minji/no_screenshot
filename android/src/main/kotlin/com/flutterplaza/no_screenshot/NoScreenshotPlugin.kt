@@ -90,6 +90,21 @@ class NoScreenshotPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activ
     private var screenCaptureCallback: Any? = null
     private var screenRecordingCallback: Any? = null
 
+private val windowFocusListener = android.view.ViewTreeObserver.OnWindowFocusChangeListener { hasFocus ->
+    val act = activity ?: return@OnWindowFocusChangeListener
+    if (!hasFocus) {
+        when {
+            isImageOverlayModeEnabled -> showImageOverlay(act)
+            isBlurOverlayModeEnabled  -> showBlurOverlay(act)
+            isColorOverlayModeEnabled -> showColorOverlay(act)
+        }
+    } else {
+        removeImageOverlay()
+        removeBlurOverlay()
+        removeColorOverlay()
+    }
+}
+
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         context = flutterPluginBinding.applicationContext
 
@@ -116,9 +131,11 @@ class NoScreenshotPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activ
         if (isRecordingListening) {
             registerScreenRecordingCallbacks()
         }
+        activity?.window?.decorView?.viewTreeObserver?.addOnWindowFocusChangeListener(windowFocusListener)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
+        activity?.window?.decorView?.viewTreeObserver?.removeOnWindowFocusChangeListener(windowFocusListener)
         unregisterScreenRecordingCallbacks()
         removeImageOverlay()
         removeBlurOverlay()
@@ -132,9 +149,11 @@ class NoScreenshotPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activ
         if (isRecordingListening) {
             registerScreenRecordingCallbacks()
         }
+        activity?.window?.decorView?.viewTreeObserver?.addOnWindowFocusChangeListener(windowFocusListener)
     }
 
     override fun onDetachedFromActivity() {
+        activity?.window?.decorView?.viewTreeObserver?.removeOnWindowFocusChangeListener(windowFocusListener)
         unregisterScreenRecordingCallbacks()
         removeImageOverlay()
         removeBlurOverlay()
@@ -225,29 +244,11 @@ class NoScreenshotPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activ
         val app = context as? Application ?: return
         lifecycleCallbacks = object : Application.ActivityLifecycleCallbacks {
             override fun onActivityPaused(act: Activity) {
-                if (act == activity && isImageOverlayModeEnabled) {
-                    act.window?.clearFlags(LayoutParams.FLAG_SECURE)
-                    showImageOverlay(act)
-                } else if (act == activity && isBlurOverlayModeEnabled) {
-                    act.window?.clearFlags(LayoutParams.FLAG_SECURE)
-                    showBlurOverlay(act)
-                } else if (act == activity && isColorOverlayModeEnabled) {
-                    act.window?.clearFlags(LayoutParams.FLAG_SECURE)
-                    showColorOverlay(act)
-                }
+             
             }
 
             override fun onActivityResumed(act: Activity) {
-                if (act == activity && isImageOverlayModeEnabled) {
-                    removeImageOverlay()
-                    act.window?.addFlags(LayoutParams.FLAG_SECURE)
-                } else if (act == activity && isBlurOverlayModeEnabled) {
-                    removeBlurOverlay()
-                    act.window?.addFlags(LayoutParams.FLAG_SECURE)
-                } else if (act == activity && isColorOverlayModeEnabled) {
-                    removeColorOverlay()
-                    act.window?.addFlags(LayoutParams.FLAG_SECURE)
-                }
+                
             }
 
             override fun onActivityCreated(act: Activity, savedInstanceState: Bundle?) {}
@@ -450,7 +451,7 @@ class NoScreenshotPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activ
                 saveBlurOverlayState(false)
                 removeBlurOverlay()
             }
-            screenshotOff()
+            // screenshotOff()
         } else {
             screenshotOn()
             removeColorOverlay()
@@ -472,7 +473,7 @@ class NoScreenshotPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activ
             saveColorOverlayState(false)
             removeColorOverlay()
         }
-        screenshotOff()
+        // screenshotOff()
         updateSharedPreferencesState("")
         return true
     }
@@ -512,7 +513,7 @@ class NoScreenshotPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activ
             saveBlurOverlayState(false)
             removeBlurOverlay()
         }
-        screenshotOff()
+        // screenshotOff()
         updateSharedPreferencesState("")
         return true
     }
@@ -768,7 +769,7 @@ class NoScreenshotPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activ
             colorValue = preferences.getInt(PREF_KEY_COLOR_VALUE, 0xFF000000.toInt())
 
             activity?.runOnUiThread {
-                if (isImageOverlayModeEnabled || isBlurOverlayModeEnabled || isColorOverlayModeEnabled || isSecure) {
+                if (isSecure) {
                     screenshotOff()
                 } else {
                     screenshotOn()
