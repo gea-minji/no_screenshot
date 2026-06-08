@@ -177,7 +177,8 @@ class NoScreenshotPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activ
             }
 
             SET_COLOR_CONST -> {
-                val color = call.argument<Int>("color") ?: 0xFF000000.toInt()
+                val colorLong = call.argument<Long>("color") ?: 0xFF000000L
+                val color = colorLong.toInt()
                 result.success(toggleScreenshotWithColor(color))
             }
 
@@ -191,7 +192,8 @@ class NoScreenshotPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activ
             }
 
             ENABLE_COLOR_CONST -> {
-                val color = call.argument<Int>("color") ?: 0xFF000000.toInt()
+                val colorLong = call.argument<Long>("color") ?: 0xFF000000L
+                val color = colorLong.toInt()
                 result.success(enableColorOverlay(color))
             }
 
