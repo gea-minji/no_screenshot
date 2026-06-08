@@ -117,4 +117,10 @@ abstract class NoScreenshotPlatform extends PlatformInterface {
       'stopScreenRecordingListening has not been implemented.',
     );
   }
+
+  Future<bool> appSwitcherColorOnly({int color = 0xFF000000}) {
+    throw UnimplementedError(
+      'appSwitcherColorOnly() has not been implemented.',
+    );
+  }
 }

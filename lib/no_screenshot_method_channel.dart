@@ -109,4 +109,13 @@ class MethodChannelNoScreenshot extends NoScreenshotPlatform {
   Future<void> stopScreenRecordingListening() {
     return methodChannel.invokeMethod<void>(stopScreenRecordingListeningConst);
   }
+
+  @override
+  Future<bool> appSwitcherColorOnly({int color = 0xFF000000}) async {
+    final result = await methodChannel.invokeMethod<bool>(
+      'appSwitcherColorOnly',
+      {'color': color},
+    );
+    return result ?? false;
+  }
 }

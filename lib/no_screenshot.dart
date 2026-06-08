@@ -170,6 +170,11 @@ class NoScreenshot implements NoScreenshotPlatform {
   }
 
   @override
+  Future<bool> appSwitcherColorOnly({int color = 0xFF000000}) {
+    return _instancePlatform.appSwitcherColorOnly(color: color);
+  }
+
+  @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is NoScreenshot &&

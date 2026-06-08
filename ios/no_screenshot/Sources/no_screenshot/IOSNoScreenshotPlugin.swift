@@ -37,6 +37,9 @@ public class IOSNoScreenshotPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
     private static let eventChannelName = "com.flutterplaza.no_screenshot_streams"
     private static let screenshotPathPlaceholder = "screenshot_path_placeholder"
 
+    private var isAppSwitcherOnlyModeEnabled: Bool = false
+    private static let appSwitcherOnlyModeKey = "appSwitcherOnlyMode"
+
     override init() {
         super.init()
 
@@ -145,6 +148,8 @@ public class IOSNoScreenshotPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
         } else if isColorOverlayModeEnabled {
             disablePreventScreenshot()
             enableColorScreen(color: colorValue)
+        } else if isAppSwitcherOnlyModeEnabled {
+            enableColorScreen(color: colorValue)
         }
     }
 
@@ -155,6 +160,8 @@ public class IOSNoScreenshotPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
         } else if isBlurOverlayModeEnabled {
             disableBlurScreen()
         } else if isColorOverlayModeEnabled {
+            disableColorScreen()
+        } else if isAppSwitcherOnlyModeEnabled {
             disableColorScreen()
         }
 
@@ -257,9 +264,24 @@ public class IOSNoScreenshotPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
         case "stopScreenRecordingListening":
             stopRecordingListening()
             result("Recording listening stopped")
+        case "appSwitcherColorOnly":
+            let color = (call.arguments as? [String: Any])?["color"] as? Int ?? 0xFF000000
+            enableAppSwitcherColorOnlyOverlay(color: color)
+            result(true)
         default:
             result(FlutterMethodNotImplemented)
         }
+    }
+
+    private func enableAppSwitcherColorOnlyOverlay(color: Int) {
+        isAppSwitcherOnlyModeEnabled = true
+        colorValue = color
+        // 다른 오버레이 모드 비활성화
+        isImageOverlayModeEnabled = false
+        isBlurOverlayModeEnabled = false
+        isColorOverlayModeEnabled = false
+        // isSecureTextEntry는 건드리지 않음 → 녹화 허용
+        persistState()
     }
 
     private func shotOff() {
